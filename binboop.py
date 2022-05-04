@@ -66,9 +66,15 @@ def check_bin_collections():
     except Exception as e:
         log(f"Error getting bin collection times: {e}")
 
-log("BinBoop running!")
-
 schedule.every().day.at(alert_time).do(check_bin_collections)
+
+log("BinBoop is running!")
+
+# On start, send a Pushover message so we know that everything is working
+startup_payload = {
+    "message": "BinBoop is running!",
+}
+send_alert(startup_payload)
 
 while True:
     schedule.run_pending()
