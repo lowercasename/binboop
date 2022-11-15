@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-alert_time = "21:00"
+alert_time = os.getenv('ALERT_TIME')
 location_id = os.getenv('LOCATION_ID')
-number_of_collections = 1
+number_of_collections = 10
 bin_collections_url = f'https://servicelayer3c.azure-api.net/wastecalendar/collection/search/{location_id}/?numberOfCollections={number_of_collections}'
 
 round_types = {
@@ -49,16 +49,24 @@ def check_bin_collections():
         data = response.json()
 
         # Parse the data from the next collection into friendly formats
-        next_collection = data['collections'][0]
-        log(next_collection)
-        collection_date = parser.parse(next_collection['date']).date()
-        collection_types = [round_types[x] for x in next_collection['roundTypes']]
-        collection_types_string = ' and '.join(collection_types)
-
-        # Check if the collection date is tomorrow (we want to be alerted
-        # the night before)
+        # As of November 2022, the API splits the collection types for one date
+        # into multiple objects, with slightly different times in the date
+        # and different collection types - so we need to scoop up a couple of
+        # collections and check them together.
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-        if collection_date == tomorrow:
+        today = datetime.date.today()
+        collections_for_tomorrow = []
+        for collection in data['collections']:
+            collection_date = parser.parse(collection['date']).date()
+            # Check if the collection date is tomorrow (we want to be alerted
+            # the night before)
+            if collection_date == today:
+                collection_types = [round_types[x] for x in collection['roundTypes']]
+                collections_for_tomorrow.extend(collection_types)
+
+        # If we have collections for tomorrow, join them into a string and send a message
+        if collections_for_tomorrow:
+            collection_types_string = ' and '.join(collections_for_tomorrow)
             payload = {
                 "message": f"Don't forget to put the {collection_types_string} {'bins' if len(collection_types) > 1 else 'bin'} out tonight.",
             }
