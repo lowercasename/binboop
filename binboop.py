@@ -59,7 +59,7 @@ def check_bin_collections():
             collection_date = parser.parse(collection['date']).date()
             # Check if the collection date is tomorrow (we want to be alerted
             # the night before)
-            if collection_date == today:
+            if collection_date == tomorrow:
                 collection_types = [round_types[x] for x in collection['roundTypes']]
                 collections_for_tomorrow.extend(collection_types)
 
