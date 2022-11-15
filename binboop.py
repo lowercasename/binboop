@@ -54,7 +54,6 @@ def check_bin_collections():
         # and different collection types - so we need to scoop up a couple of
         # collections and check them together.
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-        today = datetime.date.today()
         collections_for_tomorrow = []
         for collection in data['collections']:
             collection_date = parser.parse(collection['date']).date()
